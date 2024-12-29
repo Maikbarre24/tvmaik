@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,7 +40,11 @@
         <label for="urlInput">Or enter a video URL:</label>
         <input type="url" id="urlInput" name="url" placeholder="https://example.com/video.mp4"><br><br>
 
-        <button type="button" id="connectChromecastButton">Connect to Chromecast</button><br><br>
+        <button type="button" id="scanDevicesButton">Scan for Devices</button><br><br>
+        <select id="deviceList">
+            <option value="">Select a Device</option>
+        </select><br><br>
+
         <button type="submit">Cast Media</button>
     </form>
 
@@ -65,15 +68,29 @@
                 autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
 
-            document.getElementById('connectChromecastButton').addEventListener('click', () => {
+            document.getElementById('scanDevicesButton').addEventListener('click', async () => {
                 const status = document.getElementById('status');
-                status.textContent = "Connecting to Chromecast...";
+                const deviceList = document.getElementById('deviceList');
+                deviceList.innerHTML = '<option value="">Scanning for devices...</option>';
 
-                context.requestSession().then(() => {
-                    status.textContent = "Connected to Chromecast.";
-                }).catch((error) => {
-                    status.textContent = `Connection error: ${error}`;
-                });
+                try {
+                    const context = cast.framework.CastContext.getInstance();
+                    const devices = await context.getCastState();
+
+                    if (devices === cast.framework.CastState.NOT_CONNECTED) {
+                        status.textContent = "No devices found.";
+                    } else {
+                        status.textContent = "Devices found. Select one to cast.";
+                        deviceList.innerHTML = '<option value="">Select a Device</option>';
+                        // Simulate adding devices for demonstration purposes
+                        const option = document.createElement('option');
+                        option.value = "chromecast";
+                        option.textContent = "Chromecast Device";
+                        deviceList.appendChild(option);
+                    }
+                } catch (error) {
+                    status.textContent = `Error scanning devices: ${error}`;
+                }
             });
         }
 
