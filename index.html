@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Media Connector</title>
+    <title>TV Media Connector</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -33,23 +32,22 @@
     </style>
 </head>
 <body>
-    <h1>Connect to Nearby Devices</h1>
+    <h1>Connect to TV Devices</h1>
     <form id="mediaForm">
-        <label for="fileInput">Select a file or image to cast:</label>
-        <input type="file" id="fileInput" name="file" accept="video/*,image/*"><br><br>
+        <label for="fileInput">Select a file or video to cast:</label>
+        <input type="file" id="fileInput" name="file" accept="video/*"><br><br>
 
-        <label for="urlInput">Or enter a media URL:</label>
-        <input type="url" id="urlInput" name="url" placeholder="https://example.com/media.mp4"><br><br>
+        <label for="urlInput">Or enter a video URL:</label>
+        <input type="url" id="urlInput" name="url" placeholder="https://example.com/video.mp4"><br><br>
 
         <button type="button" id="scanChromecastButton">Scan for Chromecast Devices</button>
-        <button type="button" id="scanBluetoothButton">Scan for Bluetooth Devices</button>
-        <button type="button" id="scanPCButton">Scan for Nearby PCs</button><br><br>
+        <button type="button" id="scanBluetoothButton">Scan for Bluetooth Devices</button><br><br>
 
         <select id="deviceList">
             <option value="">Select a Device</option>
         </select><br><br>
 
-        <button type="submit">Cast Media</button>
+        <button type="submit">Cast to TV</button>
     </form>
 
     <p id="status"></p>
@@ -73,11 +71,12 @@
             });
 
             document.getElementById('scanChromecastButton').addEventListener('click', () => {
-                document.getElementById('status').textContent = "Scanning for Chromecast devices...";
+                const status = document.getElementById('status');
+                status.textContent = "Scanning for Chromecast devices...";
                 context.requestSession().then(() => {
-                    document.getElementById('status').textContent = "Chromecast session started.";
+                    status.textContent = "Chromecast session started.";
                 }).catch((error) => {
-                    document.getElementById('status').textContent = `Error: ${error}`;
+                    status.textContent = `Error: ${error}`;
                 });
             });
         }
@@ -103,20 +102,6 @@
             }
         });
 
-        // Simulate scanning PCs using WebRTC (placeholder implementation)
-        document.getElementById('scanPCButton').addEventListener('click', () => {
-            const status = document.getElementById('status');
-            status.textContent = "Scanning for nearby PCs...";
-            setTimeout(() => {
-                const deviceList = document.getElementById('deviceList');
-                const option = document.createElement('option');
-                option.value = "Nearby PC";
-                option.textContent = "PC: Example-PC";
-                deviceList.appendChild(option);
-                status.textContent = "Found a nearby PC: Example-PC";
-            }, 2000);
-        });
-
         // Handle media submission
         document.getElementById('mediaForm').addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -136,9 +121,6 @@
 
             if (deviceId.startsWith("Bluetooth")) {
                 status.textContent = "Bluetooth cannot directly cast media.";
-                return;
-            } else if (deviceId.startsWith("PC")) {
-                status.textContent = "Casting to PC is not yet supported.";
                 return;
             }
 
