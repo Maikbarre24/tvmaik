@@ -3,26 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chromecast Media Connector</title>
+    <title>YouTube-Style Cast</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
         }
-        h1 {
-            color: #333;
+        header {
+            background-color: #202020;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
         }
-        form {
-            margin: 20px 0;
+        main {
+            padding: 20px;
         }
-        label {
-            display: block;
-            margin-top: 10px;
+        .cast-button {
+            display: inline-flex;
+            align-items: center;
+            background-color: #ff0000;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
         }
-        input, button {
-            margin-top: 5px;
+        .cast-button:hover {
+            background-color: #cc0000;
+        }
+        .device-list {
+            margin-top: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             padding: 10px;
-            font-size: 14px;
+            max-width: 400px;
+        }
+        .device-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+        .device-item:last-child {
+            border-bottom: none;
+        }
+        .device-item:hover {
+            background: #f1f1f1;
         }
         #status {
             margin-top: 20px;
@@ -32,34 +62,58 @@
     </style>
 </head>
 <body>
-    <h1>Chromecast Media Connector</h1>
-    <form id="mediaForm">
-        <label for="fileInput">Select a video file:</label>
-        <input type="file" id="fileInput" name="file" accept="video/*"><br><br>
-
-        <label for="urlInput">Or enter a video URL:</label>
-        <input type="url" id="urlInput" name="url" placeholder="https://example.com/video.mp4"><br><br>
-
-        <button type="button" id="scanDevicesButton">Scan for Devices</button><br><br>
-        <select id="deviceList">
-            <option value="">Select a Device</option>
-        </select><br><br>
-
-        <button type="submit">Cast Media</button>
-    </form>
-
-    <p id="status"></p>
-
+    <header>
+        <h1>YouTube-Style Cast</h1>
+    </header>
+    <main>
+        <button class="cast-button" id="scanButton">Find Devices</button>
+        <div class="device-list" id="deviceList"></div>
+        <div>
+            <h3>Select Media to Cast</h3>
+            <label for="fileInput">Choose a file:</label>
+            <input type="file" id="fileInput" accept="video/*"><br><br>
+            <label for="urlInput">Or enter a video URL:</label>
+            <input type="url" id="urlInput" placeholder="https://example.com/video.mp4"><br><br>
+            <button class="cast-button" id="castButton">Cast Media</button>
+        </div>
+        <p id="status"></p>
+    </main>
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
     <script>
+        let devices = [];
         let castSession;
 
-        // Initialize Chromecast API
-        window['__onGCastApiAvailable'] = function(isAvailable) {
-            if (isAvailable) {
+        document.getElementById('scanButton').addEventListener('click', () => {
+            const deviceList = document.getElementById('deviceList');
+            deviceList.innerHTML = '';
+            document.getElementById('status').textContent = 'Scanning for devices...';
+
+            // Simulate Bluetooth and Chromecast device scan
+            setTimeout(() => {
+                devices = [
+                    { name: 'Living Room Chromecast', type: 'chromecast' },
+                    { name: 'Bedroom Chromecast', type: 'chromecast' },
+                    { name: 'Bluetooth Speaker', type: 'bluetooth' }
+                ];
+                devices.forEach(device => {
+                    const item = document.createElement('div');
+                    item.className = 'device-item';
+                    item.textContent = ${device.type.toUpperCase()}: ${device.name};
+                    item.addEventListener('click', () => selectDevice(device));
+                    deviceList.appendChild(item);
+                });
+                document.getElementById('status').textContent = 'Devices found. Select a device to cast.';
+            }, 2000);
+        });
+
+        function selectDevice(device) {
+            document.getElementById('status').textContent = Selected device: ${device.name};
+            if (device.type === 'chromecast') {
                 initializeCastApi();
+            } else if (device.type === 'bluetooth') {
+                document.getElementById('status').textContent = 'Bluetooth devices cannot directly cast media.';
             }
-        };
+        }
 
         function initializeCastApi() {
             const context = cast.framework.CastContext.getInstance();
@@ -68,69 +122,39 @@
                 autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
 
-            document.getElementById('scanDevicesButton').addEventListener('click', async () => {
-                const status = document.getElementById('status');
-                const deviceList = document.getElementById('deviceList');
-                deviceList.innerHTML = '<option value="">Scanning for devices...</option>';
-
-                try {
-                    const context = cast.framework.CastContext.getInstance();
-                    const devices = await context.getCastState();
-
-                    if (devices === cast.framework.CastState.NOT_CONNECTED) {
-                        status.textContent = "No devices found.";
-                    } else {
-                        status.textContent = "Devices found. Select one to cast.";
-                        deviceList.innerHTML = '<option value="">Select a Device</option>';
-                        // Simulate adding devices for demonstration purposes
-                        const option = document.createElement('option');
-                        option.value = "chromecast";
-                        option.textContent = "Chromecast Device";
-                        deviceList.appendChild(option);
-                    }
-                } catch (error) {
-                    status.textContent = `Error scanning devices: ${error}`;
-                }
+            context.requestSession().then(session => {
+                castSession = session;
+                document.getElementById('status').textContent = 'Chromecast session started. Ready to cast.';
+            }).catch(error => {
+                document.getElementById('status').textContent = Error: ${error};
             });
         }
 
-        // Handle media submission
-        document.getElementById('mediaForm').addEventListener('submit', (event) => {
-            event.preventDefault();
-            const status = document.getElementById('status');
-            const urlInput = document.getElementById('urlInput').value;
+        document.getElementById('castButton').addEventListener('click', () => {
             const fileInput = document.getElementById('fileInput').files[0];
+            const urlInput = document.getElementById('urlInput').value;
 
-            if (!urlInput && !fileInput) {
-                status.textContent = "Please provide a file or a URL!";
+            if (!castSession) {
+                document.getElementById('status').textContent = 'Please select a Chromecast device first.';
+                return;
+            }
+            if (!fileInput && !urlInput) {
+                document.getElementById('status').textContent = 'Please provide a file or a URL.';
                 return;
             }
 
-            if (urlInput) {
-                castMedia(urlInput);
-            } else if (fileInput) {
-                const fileUrl = URL.createObjectURL(fileInput);
-                castMedia(fileUrl);
-            }
+            const mediaUrl = fileInput ? URL.createObjectURL(fileInput) : urlInput;
+            castMedia(mediaUrl);
         });
 
         function castMedia(mediaUrl) {
-            const status = document.getElementById('status');
-            const context = cast.framework.CastContext.getInstance();
-            const currentSession = context.getCurrentSession();
-
-            if (!currentSession) {
-                status.textContent = "No active Chromecast session.";
-                return;
-            }
-
             const mediaInfo = new chrome.cast.media.MediaInfo(mediaUrl, 'video/mp4');
             const request = new chrome.cast.media.LoadRequest(mediaInfo);
 
-            currentSession.loadMedia(request).then(() => {
-                status.textContent = "Media successfully casted to Chromecast!";
-            }).catch((error) => {
-                status.textContent = `Failed to cast media: ${error}`;
+            castSession.loadMedia(request).then(() => {
+                document.getElementById('status').textContent = 'Media successfully casted!';
+            }).catch(error => {
+                document.getElementById('status').textContent = Failed to cast media: ${error};
             });
         }
     </script>
