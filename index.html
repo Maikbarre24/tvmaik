@@ -1,154 +1,119 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TV Media Connector</title>
+    <title>Hack Super Avanzato Macchina del Caffè Bluetooth</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #1e1e1e;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
         }
         h1 {
-            color: #333;
+            color: #00ff00;
         }
-        form {
-            margin: 20px 0;
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+            margin: 10px;
         }
-        label {
-            display: block;
-            margin-top: 10px;
+        button:hover {
+            background-color: #0056b3;
         }
-        input, select, button {
-            margin-top: 5px;
-            padding: 10px;
-            font-size: 14px;
-        }
-        #status {
+        #output {
             margin-top: 20px;
-            font-weight: bold;
-            color: green;
+            font-size: 16px;
+            color: #00ff00;
+            background-color: #000;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            white-space: pre-wrap;
+            font-family: "Courier New", monospace;
         }
     </style>
 </head>
 <body>
-    <h1>Connect to TV Devices</h1>
-    <form id="mediaForm">
-        <label for="fileInput">Select a file or video to cast:</label>
-        <input type="file" id="fileInput" name="file" accept="video/*"><br><br>
+    <div class="container">
+        <h1>Hack Super Avanzato Macchina del Caffè Bluetooth</h1>
+        <button onclick="scanDevices()">Scansiona Macchine nelle Vicinanze</button>
+        <button onclick="hackCaffe()">Prendi Caffè Gratis</button>
+        <div id="output">[Output verrà visualizzato qui]</div>
+    </div>
 
-        <label for="urlInput">Or enter a video URL:</label>
-        <input type="url" id="urlInput" name="url" placeholder="https://example.com/video.mp4"><br><br>
-
-        <button type="button" id="scanChromecastButton">Scan for Chromecast Devices</button>
-        <button type="button" id="scanBluetoothButton">Scan for Bluetooth Devices</button><br><br>
-
-        <select id="deviceList">
-            <option value="">Select a Device</option>
-        </select><br><br>
-
-        <button type="submit">Cast to TV</button>
-    </form>
-
-    <p id="status"></p>
-
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
     <script>
-        let castSession;
+        let selectedDevice = null;
+        const output = document.getElementById('output');
 
-        // Initialize Chromecast API
-        window['__onGCastApiAvailable'] = function(isAvailable) {
-            if (isAvailable) {
-                initializeCastApi();
-            }
-        };
-
-        function initializeCastApi() {
-            const context = cast.framework.CastContext.getInstance();
-            context.setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-            });
-
-            document.getElementById('scanChromecastButton').addEventListener('click', () => {
-                const status = document.getElementById('status');
-                status.textContent = "Scanning for Chromecast devices...";
-                context.requestSession().then(() => {
-                    status.textContent = "Chromecast session started.";
-                }).catch((error) => {
-                    status.textContent = `Error: ${error}`;
+        async function scanDevices() {
+            output.textContent = "Scansione dispositivi Bluetooth in corso...";
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true, // Accetta qualsiasi dispositivo Bluetooth
+                    optionalServices: ['generic_access', 'battery_service', 0xFFE0] // Servizi comuni e personalizzati
                 });
-            });
+
+                selectedDevice = device;
+                output.textContent = `Dispositivo trovato: ${device.name || 'Sconosciuto'}\nID: ${device.id}\nConnessione in corso...`;
+
+                const server = await device.gatt.connect();
+                output.textContent += "\nConnesso al dispositivo!";
+            } catch (error) {
+                output.textContent = "Errore: " + error.message;
+            }
         }
 
-        // Bluetooth scanning
-        document.getElementById('scanBluetoothButton').addEventListener('click', async () => {
-            const status = document.getElementById('status');
-            status.textContent = "Scanning for Bluetooth devices...";
+        async function hackCaffe() {
+            if (!selectedDevice) {
+                output.textContent = "Nessun dispositivo selezionato. Scansiona prima!";
+                return;
+            }
+
+            output.textContent = "Avvio exploit avanzato per caffè gratis...";
             try {
-                if (!navigator.bluetooth) {
-                    status.textContent = "Bluetooth not supported on this browser.";
-                    return;
+                const server = await selectedDevice.gatt.connect();
+                const services = await server.getPrimaryServices();
+
+                for (const service of services) {
+                    output.textContent += `\nServizio trovato: ${service.uuid}`;
+                    const characteristics = await service.getCharacteristics();
+
+                    for (const characteristic of characteristics) {
+                        output.textContent += `\nCaratteristica trovata: ${characteristic.uuid}`;
+                        try {
+                            // Prova a scrivere un comando fittizio per ottenere caffè gratis
+                            await characteristic.writeValue(new Uint8Array([0xCA, 0xFE, 0x00]));
+                            output.textContent += "\nExploit completato! Caffè gratis in arrivo! 🎉";
+                            return;
+                        } catch (error) {
+                            output.textContent += `\nErrore su caratteristica ${characteristic.uuid}: ${error.message}`;
+                        }
+                    }
                 }
-                const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-                const deviceList = document.getElementById('deviceList');
-                const option = document.createElement('option');
-                option.value = device.name;
-                option.textContent = `Bluetooth: ${device.name}`;
-                deviceList.appendChild(option);
-                status.textContent = `Found Bluetooth device: ${device.name}`;
-            } catch (err) {
-                status.textContent = "Bluetooth scan cancelled or failed.";
+                output.textContent += "\nNessuna caratteristica vulnerabile trovata.";
+            } catch (error) {
+                output.textContent = "Errore durante l'exploit: " + error.message;
             }
-        });
-
-        // Handle media submission
-        document.getElementById('mediaForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const status = document.getElementById('status');
-            const urlInput = document.getElementById('urlInput').value;
-            const fileInput = document.getElementById('fileInput').files[0];
-            const deviceId = document.getElementById('deviceList').value;
-
-            if (!deviceId) {
-                status.textContent = "Please select a device first!";
-                return;
-            }
-            if (!urlInput && !fileInput) {
-                status.textContent = "Please provide a file or a URL!";
-                return;
-            }
-
-            if (deviceId.startsWith("Bluetooth")) {
-                status.textContent = "Bluetooth cannot directly cast media.";
-                return;
-            }
-
-            if (urlInput) {
-                castMedia(urlInput);
-            } else if (fileInput) {
-                const fileUrl = URL.createObjectURL(fileInput);
-                castMedia(fileUrl);
-            }
-        });
-
-        function castMedia(mediaUrl) {
-            const status = document.getElementById('status');
-            const context = cast.framework.CastContext.getInstance();
-            const currentSession = context.getCurrentSession();
-            if (!currentSession) {
-                status.textContent = "No active Chromecast session.";
-                return;
-            }
-
-            const mediaInfo = new chrome.cast.media.MediaInfo(mediaUrl, 'video/mp4');
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-
-            currentSession.loadMedia(request).then(() => {
-                status.textContent = "Media successfully sent to Chromecast!";
-            }).catch((error) => {
-                status.textContent = `Failed to cast media: ${error}`;
-            });
         }
     </script>
 </body>
